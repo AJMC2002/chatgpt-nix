@@ -1,8 +1,10 @@
 {
   autoPatchelfHook,
+  coreutils,
   fetchurl,
   lib,
   makeWrapper,
+  nodejs,
   stdenvNoCC,
   xz,
   alsa-lib,
@@ -61,6 +63,7 @@ in
     nativeBuildInputs = [
       autoPatchelfHook
       makeWrapper
+      nodejs
       xz
     ];
 
@@ -117,11 +120,13 @@ in
       mv "$out/usr/lib" "$out/lib"
       mv "$out/usr/share" "$out/share"
       rmdir "$out/usr"
+      chmod u+w "$out/lib/chatgpt/resources/app.asar"
+      node ${./patch-marketplace.mjs} "$out/lib/chatgpt/resources/app.asar"
       substituteInPlace "$out/share/applications/chatgpt.desktop" \
         --replace-fail 'Exec=chatgpt %U' "Exec=$out/bin/chatgpt %U"
       makeWrapper "$out/lib/chatgpt/ChatGPT" "$out/bin/chatgpt" \
         --chdir "$out/lib/chatgpt" \
-        --prefix PATH : ${lib.makeBinPath [xdg-utils]}
+        --prefix PATH : ${lib.makeBinPath [coreutils xdg-utils]}
     '';
 
     meta = {
